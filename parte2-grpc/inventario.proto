@@ -1,0 +1,77 @@
+// Parte 2 - Definición del servicio gRPC (Protocol Buffers v3)
+// =============================================================
+// Archivo:  inventario.proto
+// Servicio: Inventario
+// Método:   ObtenerProducto  (unary RPC)
+//
+// Para generar el código Python ejecutar:
+//   python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. inventario.proto
+//
+// Requiere:  pip install grpcio grpcio-tools
+
+syntax = "proto3";
+
+// Paquete lógico que evita colisiones de nombres
+package inventario;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mensajes de solicitud
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Solicitud para obtener un producto por su ID
+message SolicitudProducto {
+  string id = 1;           // Identificador único del producto
+}
+
+// Solicitud para listar todos los productos
+// (sin filtros, campo reservado para paginación futura)
+message SolicitudListar {
+  int32 pagina     = 1;    // Número de página (0 = primera)
+  int32 por_pagina = 2;    // Elementos por página (0 = todos)
+}
+
+// Solicitud para agregar un producto nuevo
+message SolicitudAgregarProducto {
+  string nombre = 1;
+  double precio = 2;
+  int32  stock  = 3;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mensajes de respuesta
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Representa un producto del catálogo
+message Producto {
+  string id     = 1;       // ID único (ej. "p-001")
+  string nombre = 2;       // Nombre descriptivo
+  double precio = 3;       // Precio en USD
+  int32  stock  = 4;       // Unidades disponibles
+}
+
+// Lista de productos
+message ListaProductos {
+  int32             total    = 1;    // Total de productos en el catálogo
+  repeated Producto productos = 2;  // Lista de productos
+}
+
+// Respuesta de confirmación (alta de producto)
+message RespuestaAgregar {
+  bool    exito    = 1;    // true si se creó correctamente
+  string  mensaje  = 2;    // Mensaje descriptivo
+  Producto producto = 3;   // Producto creado con ID asignado
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Servicio Inventario
+// ─────────────────────────────────────────────────────────────────────────────
+service Inventario {
+  // Obtiene un producto específico por su ID (RPC unario)
+  rpc ObtenerProducto (SolicitudProducto) returns (Producto);
+
+  // Devuelve el catálogo completo (RPC unario)
+  rpc ListarProductos (SolicitudListar) returns (ListaProductos);
+
+  // Registra un nuevo producto (RPC unario)
+  rpc AgregarProducto (SolicitudAgregarProducto) returns (RespuestaAgregar);
+}
